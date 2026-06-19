@@ -441,7 +441,7 @@ function formatRupiah(angka) {
                     <div>Omzet/Thn: <b>Rp ${formatRupiah(item.omzetThn)}</b></div>
                 </div>
                 <div class="history-actions">
-                    <button class="btn-sm" onclick="alert('Fitur salin integrasi FASIH')"><i class="fas fa-copy"></i> Salin</button>
+                    <button class="btn-sm" onclick="salinData(${index})"><i class="fas fa-copy"></i> Salin</button>
                     <button class="btn-sm btn-danger-outline" onclick="hapusSatuRiwayat(${index})"><i class="fas fa-trash"></i> Hapus</button>
                 </div>
             </div>
@@ -456,6 +456,23 @@ function formatRupiah(angka) {
             localStorage.setItem('se2026_history', JSON.stringify(history));
             renderHistory();
         }
+    }
+
+    function salinData(index) {
+        // Ambil data riwayat yang diklik
+        let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
+        let item = history[index];
+        
+        // Format teks yang akan di-copy (bisa disesuaikan kebutuhan FASIH)
+        // Saat ini formatnya menyalin angka mentah tanpa titik agar mudah di-paste
+        let textToCopy = `Omzet/Thn: ${item.omzetThn}\nLaba/Bln: ${item.labaBln}`;
+
+        // Perintah untuk meng-copy ke clipboard HP/Laptop
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Berhasil disalin! Silakan Paste (Tempel) di aplikasi FASIH.');
+        }).catch(err => {
+            alert('Gagal menyalin data. Pastikan browser mengizinkan akses Clipboard.');
+        });
     }
 
     function hapusSemuaRiwayat() {
