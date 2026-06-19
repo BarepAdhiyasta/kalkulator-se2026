@@ -449,8 +449,8 @@ function formatRupiah(angka) {
     }
 
     function hapusSatuRiwayat(index) {
-        // Tambahkan kotak dialog konfirmasi di sini
-        if (confirm('Apakah Anda yakin ingin menghapus riwayat perhitungan ini?')) {
+        // Notifikasi untuk hapus SATU data
+        if (confirm('Apakah Anda yakin ingin menghapus riwayat ini?')) {
             let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
             history.splice(index, 1);
             localStorage.setItem('se2026_history', JSON.stringify(history));
@@ -459,7 +459,8 @@ function formatRupiah(angka) {
     }
 
     function hapusSemuaRiwayat() {
-        if(confirm('Yakin ingin menghapus semua riwayat?')) {
+        // Notifikasi untuk hapus SEMUA data
+        if (confirm('Apakah Anda yakin menghapus semua riwayat ini?')) {
             localStorage.removeItem('se2026_history');
             renderHistory();
         }
