@@ -142,7 +142,7 @@
                 <label>Omzet Per Bulan</label>
                 <div class="input-group">
                     <span>Rp</span>
-                    <input type="text" id="omzet" class="rupiah-input" value="0">
+                    <input type="text" id="omzet" class="rupiah-input" value="0" inputmode="numeric">
                 </div>
             </div>
         </div>
@@ -168,7 +168,7 @@
                 <label>Rata-rata Gaji Per Orang Per Bulan</label>
                 <div class="input-group">
                     <span>Rp</span>
-                    <input type="text" id="gajiKaryawan" class="rupiah-input" value="0">
+                    <input type="text" id="gajiKaryawan" class="rupiah-input" value="0" inputmode="numeric">
                 </div>
             </div>
         </div>
@@ -324,15 +324,15 @@ function formatRupiah(angka) {
         const div = document.createElement('div');
         div.className = 'cost-item';
         div.innerHTML = `
-            <input type="text" class="nama-biaya" placeholder="Nama biaya...">
-            <div class="input-group">
-                <span>Rp</span>
-                <input type="text" class="rupiah-input nominal-biaya" value="0">
-            </div>
-            <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-        `;
-        costList.appendChild(div);
-    }
+        <input type="text" class="nama-biaya" placeholder="Nama biaya...">
+        <div class="input-group">
+            <span>Rp</span>
+            <input type="text" class="rupiah-input nominal-biaya" value="0" inputmode="numeric">
+        </div>
+        <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    `;
+    costList.appendChild(div);
+}
 
     // Core Calculation Logic
     function hitungPenghasilan() {
