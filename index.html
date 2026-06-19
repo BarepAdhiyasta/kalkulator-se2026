@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Usaha SE2026</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e3a215; /* Blue-900 */
+            --secondary: #f59e0b; /* Amber-500 */
+            --bg-color: #f3f4f6; /* Gray-100 */
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
+        
+        /* Mobile layout container */
+        .app-container { width: 100%; max-width: 480px; background-color: var(--bg-color); min-height: 100vh; position: relative; padding-bottom: 20px;}
+        
+        /* Header & Tabs */
+        header { background-color: var(--primary); color: white; padding: 15px 20px; }
+        .header-title { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .header-title span.badge { background-color: var(--secondary); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 12px;}
+        .header-subtitle { font-size: 12px; opacity: 0.9; }
+        
+        .tabs { display: flex; background-color: #af831e; border-bottom: 2px solid #8a681e; }
+        .tab { flex: 1; text-align: center; padding: 12px 0; color: #000000; font-size: 14px; cursor: pointer; transition: 0.3s; }
+        .tab.active { color: white; border-bottom: 3px solid var(--secondary); font-weight: bold; }
+        .tab i { margin-right: 5px; }
+
+        /* Content Sections */
+        .section { display: none; padding: 15px; }
+        .section.active { display: block; }
+        
+        .card { background: var(--card-bg); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .card-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); }
+        .card-title::before { content: ''; display: inline-block; width: 8px; height: 8px; background-color: var(--secondary); border-radius: 50%; margin-right: 8px; }
+
+        /* Grid Buttons (Jenis Usaha) */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-kategori { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px 10px; text-align: center; cursor: pointer; font-size: 13px; color: var(--text-muted); transition: 0.2s; }
+        .btn-kategori.selected { border-color: var(--primary); color: var(--primary); background-color: #eff6ff; font-weight: bold; }
+        .btn-kategori i { font-size: 24px; margin-bottom: 8px; display: block; }
+
+        /* Form Inputs */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;}
+        input[type="text"], input[type="text"]:focus, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; background: #f9fafb;}
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        .input-group { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; background: #f9fafb; overflow: hidden; }
+        .input-group span { padding: 10px; background: #e5e7eb; color: var(--text-muted); font-size: 14px; font-weight: bold; }
+        .input-group input { border: none; background: transparent; flex: 1; padding: 10px; font-size: 16px; font-weight: bold;}
+
+        /* Dynamic Costs */
+        .cost-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .cost-item input[type="text"].nama-biaya { flex: 1; }
+        .cost-item .input-group { flex: 1; margin-bottom: 0;}
+        .btn-remove { background: #fee2e2; color: #ef4444; border: none; width: 35px; height: 35px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        .btn-add { background: transparent; color: var(--primary); border: 1px dashed var(--primary); width: 100%; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+
+        /* Action Buttons */
+        .btn-primary { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(30, 58, 138, 0.2); }
+        
+        /* Results Section */
+        .result-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .result-box.danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .result-box h3 { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
+        .result-box .amount { font-size: 20px; font-weight: bold; color: #166534; }
+        .result-box.danger .amount { color: #991b1b; }
+        
+        .summary-list { font-size: 13px; margin-bottom: 15px; }
+        .summary-list div { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--border); }
+        .summary-list div.bold { font-weight: bold; border-bottom: none; margin-top: 5px; }
+
+        /* History List */
+        .history-item { padding: 15px; border-bottom: 1px solid var(--border); background: white; margin-bottom: 10px; border-radius: 8px;}
+        .history-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .history-title { font-weight: bold; color: var(--primary); }
+        .history-date { font-size: 11px; color: var(--text-muted); }
+        .history-data { font-size: 13px; margin-bottom: 10px; }
+        .history-actions { display: flex; gap: 10px; }
+        .btn-sm { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: white; cursor: pointer; font-size: 12px;}
+        .btn-danger-outline { color: #ef4444; border-color: #fca5a5; background: #fef2f2;}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="header-title">
+            <span class="badge">BPS</span>
+            <div>
+                <h2 style="font-size: 16px;">Kalkulator Usaha SE2026</h2>
+                <div class="header-subtitle">Bantu pengisian FASIH lebih cepat & akurat</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('kalkulator')"><i class="fas fa-calculator"></i> Kalkulator</div>
+        <div class="tab" onclick="switchTab('riwayat')"><i class="fas fa-clipboard-list"></i> Riwayat</div>
+    </div>
+
+    <div id="kalkulator" class="section active">
+        <div class="card">
+            <div class="card-title">Jenis Usaha Responden</div>
+            <div class="grid-2">
+                <div class="btn-kategori selected" onclick="selectKategori(this, 'Dagang')"><i class="fas fa-shopping-cart"></i> Dagang / Retail</div>
+                <div class="btn-kategori" onclick="selectKategori(this, 'Kuliner')"><i class="fas fa-utensils"></i> Kuliner / Makanan</div>
+                <div class="btn-kategori" onclick="selectKategori(this, 'Jasa')"><i class="fas fa-tools"></i> Usaha Jasa</div>
+                <div class="btn-kategori" onclick="selectKategori(this, 'Manufaktur')"><i class="fas fa-industry"></i> Produksi / Manufaktur</div>
+                <div class="btn-kategori" onclick="selectKategori(this, 'Pertanian')"><i class="fas fa-leaf"></i> Pertanian / Perkebunan</div>
+                <div class="btn-kategori" onclick="selectKategori(this, 'Lainnya')"><i class="fas fa-box"></i> Lainnya / Campuran</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Identitas & Periode</div>
+            <div class="form-group">
+                <label>Nama Usaha (Opsional)</label>
+                <input type="text" id="namaUsaha" placeholder="Contoh: Warung Bu Sari">
+            </div>
+            <div class="form-group">
+                <label>Responden Menyebut Omzet Per</label>
+                <select id="periodeOmzet">
+                    <option value="Bulan">Bulan</option>
+                    <option value="Hari">Hari</option>
+                    <option value="Minggu">Minggu</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Omzet / Penjualan Kotor</div>
+            <div class="form-group">
+                <label>Omzet Per Bulan</label>
+                <div class="input-group">
+                    <span>Rp</span>
+                    <input type="text" id="omzet" class="rupiah-input" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Biaya Operasional</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Semua biaya dalam satuan waktu yang sama dengan omzet</p>
+            <div id="costList">
+                </div>
+            <button class="btn-add" onclick="addCostItem()">+ Tambah Item Biaya</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Tenaga Kerja</div>
+            <div class="form-group">
+                <label>Jumlah Karyawan (Selain Pemilik)</label>
+                <div class="input-group" style="padding-right: 10px;">
+                    <input type="number" id="jmlKaryawan" value="0" style="text-align: right;">
+                    <span style="background: none; padding: 0;">orang</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Rata-rata Gaji Per Orang Per Bulan</label>
+                <div class="input-group">
+                    <span>Rp</span>
+                    <input type="text" id="gajiKaryawan" class="rupiah-input" value="0">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="hitungPenghasilan()">🗓 HITUNG PENGHASILAN</button>
+
+        <div id="hasilKalkulasi" class="card" style="display: none; margin-top: 20px;">
+            <div class="card-title">Hasil Kalkulasi</div>
+            
+            <div class="grid-2" style="margin-bottom: 15px;">
+                <div class="result-box" style="padding: 10px;">
+                    <h3>Omzet / Hari</h3>
+                    <div class="amount" id="resOmzetHari" style="font-size: 16px;">Rp 0</div>
+                </div>
+                <div class="result-box" style="padding: 10px;">
+                    <h3>Omzet / Bulan</h3>
+                    <div class="amount" id="resOmzetBulan" style="font-size: 16px;">Rp 0</div>
+                </div>
+            </div>
+            
+            <div class="result-box" style="background: #fef3c7; border-color: #fde68a;">
+                <h3>Omzet / Tahun</h3>
+                <div class="amount" id="resOmzetTahun" style="color: #b45309;">Rp 0</div>
+            </div>
+
+            <div class="summary-list" id="summaryList">
+                </div>
+
+            <div class="grid-2">
+                <div class="result-box" id="boxLabaHari">
+                    <h3>Laba Bersih / Hari</h3>
+                    <div class="amount" id="resLabaHari" style="font-size: 16px;">Rp 0</div>
+                </div>
+                <div class="result-box" id="boxLabaBulan">
+                    <h3>Laba Bersih / Bulan</h3>
+                    <div class="amount" id="resLabaBulan" style="font-size: 16px;">Rp 0</div>
+                </div>
+            </div>
+            
+            <div class="result-box" style="background: #e0f2fe; border-color: #bae6fd;">
+                <h3>Laba Bersih / Tahun</h3>
+                <div class="amount" id="resLabaTahun" style="color: #0369a1;">Rp 0</div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn-sm" style="background: var(--primary); color: white; border: none; padding: 12px;" onclick="simpanRiwayat()">Simpan ke Riwayat</button>
+                <button class="btn-sm" style="padding: 12px;" onclick="resetForm()">Reset Form</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="riwayat" class="section">
+        <div class="card">
+            <div class="card-title">Riwayat Kalkulasi</div>
+            <button class="btn-sm btn-danger-outline" style="width: 100%; margin-bottom: 15px;" onclick="hapusSemuaRiwayat()">
+                <i class="fas fa-trash"></i> Hapus Semua Riwayat
+            </button>
+            <div id="historyList">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeKategori = 'Dagang';
+    const HARI_KERJA_SEBULAN = 22; // Asumsi 5 hari kerja seminggu
+
+// Format Rupiah Live Input
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('rupiah-input')) {
+            // Ambil hanya angka murni
+            let rawValue = e.target.value.replace(/[^,\d]/g, '');
+            
+            // Konversi ke integer untuk otomatis membuang angka 0 di depan (misal "05" jadi "5").
+            // Jika rawValue kosong (dihapus semua), biarkan tetap kosong.
+            let value = rawValue === '' ? '' : parseInt(rawValue, 10).toString();
+            
+            e.target.value = formatRupiah(value);
+        }
+    });
+
+function formatRupiah(angka) {
+        if (!angka) return ''; // <--- UBAH DI SINI: ganti '0' menjadi '' (string kosong)
+        let number_string = angka.toString().replace(/[^,\d]/g, ''),
+            split = number_string.split(','),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    }
+
+    // (Ini kode lama yang sudah ada di file kamu)
+    // Format Rupiah Live Input
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('rupiah-input')) {
+            let value = e.target.value.replace(/[^,\d]/g, '');
+            e.target.value = formatRupiah(value);
+        }
+    });
+
+    // Tab Navigation
+    function switchTab(tabId) {
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(tabId === 'riwayat') renderHistory();
+    }
+
+    // Kategori Selection
+    function selectKategori(element, kategori) {
+        document.querySelectorAll('.btn-kategori').forEach(btn => btn.classList.remove('selected'));
+        element.classList.add('selected');
+        activeKategori = kategori;
+    }
+
+    // Format Rupiah Live Input
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('rupiah-input')) {
+            let value = e.target.value.replace(/[^,\d]/g, '');
+            e.target.value = formatRupiah(value);
+        }
+    });
+
+    function formatRupiah(angka) {
+        if (!angka) return '0';
+        let number_string = angka.toString().replace(/[^,\d]/g, ''),
+            split = number_string.split(','),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+        return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    }
+
+    function unformatRupiah(angkaStr) {
+        if (!angkaStr) return 0;
+        return parseInt(angkaStr.toString().replace(/\./g, '')) || 0;
+    }
+
+    // Dynamic Cost Items
+    function addCostItem() {
+        const costList = document.getElementById('costList');
+        const div = document.createElement('div');
+        div.className = 'cost-item';
+        div.innerHTML = `
+            <input type="text" class="nama-biaya" placeholder="Nama biaya...">
+            <div class="input-group">
+                <span>Rp</span>
+                <input type="text" class="rupiah-input nominal-biaya" value="0">
+            </div>
+            <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+        `;
+        costList.appendChild(div);
+    }
+
+    // Core Calculation Logic
+    function hitungPenghasilan() {
+        let omzetBulan = unformatRupiah(document.getElementById('omzet').value);
+        
+        // Kumpulkan Biaya Operasional
+        let items = document.querySelectorAll('.cost-item');
+        let totalBiayaItems = 0;
+        let rincianHTML = `<div><span>Omzet / Bulan</span> <span>Rp ${formatRupiah(omzetBulan)}</span></div>`;
+        
+        items.forEach(item => {
+            let nama = item.querySelector('.nama-biaya').value || 'Biaya';
+            let nominal = unformatRupiah(item.querySelector('.nominal-biaya').value);
+            totalBiayaItems += nominal;
+            rincianHTML += `<div><span style="color:var(--text-muted)">- ${nama}</span> <span>Rp ${formatRupiah(nominal)}</span></div>`;
+        });
+
+        // Kumpulkan Tenaga Kerja
+        let jmlKaryawan = parseInt(document.getElementById('jmlKaryawan').value) || 0;
+        let gajiKaryawan = unformatRupiah(document.getElementById('gajiKaryawan').value);
+        let totalGaji = jmlKaryawan * gajiKaryawan;
+        
+        if (jmlKaryawan > 0) {
+            rincianHTML += `<div><span style="color:var(--text-muted)">- Gaji ${jmlKaryawan} karyawan</span> <span>Rp ${formatRupiah(totalGaji)}</span></div>`;
+        }
+
+        let totalBiayaBulan = totalBiayaItems + totalGaji;
+        rincianHTML += `<div class="bold"><span>Total Biaya / Bulan</span> <span>Rp ${formatRupiah(totalBiayaBulan)}</span></div>`;
+        
+        document.getElementById('summaryList').innerHTML = rincianHTML;
+
+        // Kalkulasi Omzet
+        let omzetHari = Math.round(omzetBulan / HARI_KERJA_SEBULAN);
+        let omzetTahun = omzetBulan * 12;
+
+        document.getElementById('resOmzetHari').innerText = `Rp ${formatRupiah(omzetHari)}`;
+        document.getElementById('resOmzetBulan').innerText = `Rp ${formatRupiah(omzetBulan)}`;
+        document.getElementById('resOmzetTahun').innerText = `Rp ${formatRupiah(omzetTahun)}`;
+
+        // Kalkulasi Laba
+        let labaBulan = omzetBulan - totalBiayaBulan;
+        let labaHari = Math.round(labaBulan / HARI_KERJA_SEBULAN);
+        let labaTahun = labaBulan * 12;
+
+        setResultColor('boxLabaHari', 'resLabaHari', labaHari);
+        setResultColor('boxLabaBulan', 'resLabaBulan', labaBulan);
+
+        document.getElementById('resLabaHari').innerText = `Rp ${formatRupiah(labaHari)}`;
+        document.getElementById('resLabaBulan').innerText = `Rp ${formatRupiah(labaBulan)}`;
+        document.getElementById('resLabaTahun').innerText = `Rp ${formatRupiah(labaTahun)}`;
+
+        // Tampilkan Hasil
+        document.getElementById('hasilKalkulasi').style.display = 'block';
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+        // Simpan state sementara untuk fungsi save
+        window.currentCalc = {
+            nama: document.getElementById('namaUsaha').value || 'Tanpa Nama',
+            kategori: activeKategori,
+            labaBln: labaBulan,
+            omzetThn: omzetTahun,
+            date: new Date().toLocaleString('id-ID')
+        };
+    }
+
+    function setResultColor(boxId, textId, value) {
+        const box = document.getElementById(boxId);
+        if (value < 0) {
+            box.classList.add('danger');
+            document.getElementById(textId).innerText = `- Rp ${formatRupiah(Math.abs(value))}`;
+        } else {
+            box.classList.remove('danger');
+        }
+    }
+
+    // Riwayat Management
+    function simpanRiwayat() {
+        if(!window.currentCalc) return;
+        let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
+        history.unshift(window.currentCalc);
+        localStorage.setItem('se2026_history', JSON.stringify(history));
+        alert('Data berhasil disimpan ke riwayat!');
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
+        
+        if (history.length === 0) {
+            list.innerHTML = `<p style="text-align:center; color:gray; font-size: 13px;">Belum ada riwayat perhitungan.</p>`;
+            return;
+        }
+
+        list.innerHTML = history.map((item, index) => `
+            <div class="history-item">
+                <div class="history-header">
+                    <span class="history-title"><i class="fas fa-store"></i> ${item.nama}</span>
+                    <span class="history-date">${item.date}</span>
+                </div>
+                <div class="history-data">
+                    <div style="color:var(--text-muted); margin-bottom: 5px;">Kategori: ${item.kategori}</div>
+                    <div>Laba/Bln: <b>Rp ${formatRupiah(item.labaBln)}</b></div>
+                    <div>Omzet/Thn: <b>Rp ${formatRupiah(item.omzetThn)}</b></div>
+                </div>
+                <div class="history-actions">
+                    <button class="btn-sm" onclick="alert('Fitur salin integrasi FASIH')"><i class="fas fa-copy"></i> Salin</button>
+                    <button class="btn-sm btn-danger-outline" onclick="hapusSatuRiwayat(${index})"><i class="fas fa-trash"></i> Hapus</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function hapusSatuRiwayat(index) {
+        let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
+        history.splice(index, 1);
+        localStorage.setItem('se2026_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function hapusSemuaRiwayat() {
+        if(confirm('Yakin ingin menghapus semua riwayat?')) {
+            localStorage.removeItem('se2026_history');
+            renderHistory();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('namaUsaha').value = '';
+        document.getElementById('omzet').value = '0';
+        document.getElementById('jmlKaryawan').value = '0';
+        document.getElementById('gajiKaryawan').value = '0';
+        document.getElementById('costList').innerHTML = '';
+        document.getElementById('hasilKalkulasi').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+</body>
+</html>
