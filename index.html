@@ -9,6 +9,22 @@
     <link rel="apple-touch-icon" href="./icon-192.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* Tampilan Pop-up Kustom */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 1000; 
+            display: none; /* Disembunyikan dulu */
+            justify-content: center; align-items: center; 
+        }
+        .modal-box { 
+            background: white; padding: 20px; border-radius: 12px; 
+            width: 85%; max-width: 320px; text-align: center; 
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2); 
+        }
+        .btn-modal { 
+            flex: 1; padding: 10px; border-radius: 6px; border: none; 
+            font-weight: bold; cursor: pointer; font-size: 14px;
+        }
         :root {
             --primary: #e3a215; /* Blue-900 */
             --secondary: #f59e0b; /* Amber-500 */
@@ -93,6 +109,18 @@
     </style>
 </head>
 <body>
+
+    <!-- Kotak Pop-up Kustom -->
+    <div id="modalHapus" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 10px; color: var(--primary);">Konfirmasi Hapus</h3>
+            <p id="teksModal" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">Apakah yakin?</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-modal" style="background: #e5e7eb; color: var(--text-main);" onclick="tutupModal()">Batal</button>
+                <button class="btn-modal" style="background: #ef4444; color: white;" onclick="eksekusiHapus()">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
 
 <div class="app-container">
     <header>
@@ -427,7 +455,7 @@ function formatRupiah(angka) {
         if (history.length === 0) {
             list.innerHTML = `<p style="text-align:center; color:gray; font-size: 13px;">Belum ada riwayat perhitungan.</p>`;
             return;
-        }
+        }0
 
         list.innerHTML = history.map((item, index) => `
             <div class="history-item">
@@ -448,39 +476,41 @@ function formatRupiah(angka) {
         `).join('');
     }
 
-    function hapusSatuRiwayat(index) {
-        // Notifikasi untuk hapus SATU data
-        if (confirm('Apakah Anda yakin ingin menghapus riwayat ini?')) {
-            let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
-            history.splice(index, 1);
-            localStorage.setItem('se2026_history', JSON.stringify(history));
-            renderHistory();
-        }
+    // --- SISTEM POP-UP KUSTOM ---
+    let targetHapusData = null; // Menyimpan data apa yang mau dihapus
+
+    function bukaModal(pesan, target) {
+        document.getElementById('teksModal').innerText = pesan;
+        document.getElementById('modalHapus').style.display = 'flex'; // Munculkan pop-up
+        targetHapusData = target;
     }
 
-    function salinData(index) {
-        // Ambil data riwayat yang diklik
-        let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
-        let item = history[index];
-        
-        // Format teks yang akan di-copy (bisa disesuaikan kebutuhan FASIH)
-        // Saat ini formatnya menyalin angka mentah tanpa titik agar mudah di-paste
-        let textToCopy = `Omzet/Thn: ${item.omzetThn}\nLaba/Bln: ${item.labaBln}`;
+    function tutupModal() {
+        document.getElementById('modalHapus').style.display = 'none'; // Sembunyikan pop-up
+        targetHapusData = null;
+    }
 
-        // Perintah untuk meng-copy ke clipboard HP/Laptop
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            alert('Berhasil disalin! Silakan Paste (Tempel) di aplikasi FASIH.');
-        }).catch(err => {
-            alert('Gagal menyalin data. Pastikan browser mengizinkan akses Clipboard.');
-        });
+    function eksekusiHapus() {
+        if (targetHapusData === 'semua') {
+            localStorage.removeItem('se2026_history');
+        } else if (targetHapusData !== null) {
+            let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
+            history.splice(targetHapusData, 1);
+            localStorage.setItem('se2026_history', JSON.stringify(history));
+        }
+        renderHistory();
+        tutupModal(); // Tutup pop-up setelah sukses menghapus
+    }
+
+    // --- FUNGSI TOMBOL HAPUS ---
+    function hapusSatuRiwayat(index) {
+        // Panggil pop-up kustom kita
+        bukaModal('Apakah Anda yakin ingin menghapus riwayat perhitungan ini?', index);
     }
 
     function hapusSemuaRiwayat() {
-        // Notifikasi untuk hapus SEMUA data
-        if (confirm('Apakah Anda yakin menghapus semua riwayat ini?')) {
-            localStorage.removeItem('se2026_history');
-            renderHistory();
-        }
+        // Panggil pop-up kustom kita
+        bukaModal('Apakah Anda yakin ingin menghapus SEMUA data riwayat? Data tidak dapat dikembalikan.', 'semua');
     }
 
     function resetForm() {
