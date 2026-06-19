@@ -449,10 +449,13 @@ function formatRupiah(angka) {
     }
 
     function hapusSatuRiwayat(index) {
-        let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
-        history.splice(index, 1);
-        localStorage.setItem('se2026_history', JSON.stringify(history));
-        renderHistory();
+        // Tambahkan kotak dialog konfirmasi di sini
+        if (confirm('Apakah Anda yakin ingin menghapus riwayat perhitungan ini?')) {
+            let history = JSON.parse(localStorage.getItem('se2026_history') || '[]');
+            history.splice(index, 1);
+            localStorage.setItem('se2026_history', JSON.stringify(history));
+            renderHistory();
+        }
     }
 
     function hapusSemuaRiwayat() {
