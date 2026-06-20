@@ -170,7 +170,7 @@
         <div class="card">
             <div class="card-title">Omzet / Penjualan Kotor</div>
             <div class="form-group">
-                <label>Omzet Per Bulan</label>
+                <label id="labelOmzet">OMZET PER BULAN</label>
                 <div class="input-group">
                     <span>Rp</span>
                     <input type="text" id="omzet" class="rupiah-input" value="0" inputmode="numeric">
@@ -267,13 +267,19 @@
     let activeKategori = 'Dagang';
     const HARI_KERJA_SEBULAN = 22; // Asumsi 5 hari kerja seminggu
 
+    // Mengubah label Omzet secara dinamis mengikuti dropdown
+    document.getElementById('periodeOmzet').addEventListener('change', function() {
+        let periode = this.value.toUpperCase(); // Ubah jadi huruf besar
+        document.getElementById('labelOmzet').innerText = 'OMZET PER ' + periode;
+    });
+
 // Format Rupiah Live Input
     document.addEventListener('input', function (e) {
         if (e.target.classList.contains('rupiah-input')) {
             // Ambil hanya angka murni
             let rawValue = e.target.value.replace(/[^,\d]/g, '');
             
-            // Konversi ke integer untuk otomatis membuang angka 0 di depan (misal "05" jadi "5").
+            // Konversi ke integer untuk otomatis membuang angka 0 di depan (mi  "05" jadi "5").
             // Jika rawValue kosong (dihapus semua), biarkan tetap kosong.
             let value = rawValue === '' ? '' : parseInt(rawValue, 10).toString();
             
@@ -367,12 +373,13 @@ function formatRupiah(angka) {
 
     // Core Calculation Logic
     function hitungPenghasilan() {
-        let omzetBulan = unformatRupiah(document.getElementById('omzet').value);
+        let periode = document.getElementById('periodeOmzet').value;
+        let inputOmzet = unformatRupiah(document.getElementById('omzet').value);
         
-        // Kumpulkan Biaya Operasional
+        // Kumpulkan Biaya Operasional (Satuannya mengikuti periode Omzet)
         let items = document.querySelectorAll('.cost-item');
         let totalBiayaItems = 0;
-        let rincianHTML = `<div><span>Omzet / Bulan</span> <span>Rp ${formatRupiah(omzetBulan)}</span></div>`;
+        let rincianHTML = `<div><span>Omzet / ${periode}</span> <span>Rp ${formatRupiah(inputOmzet)}</span></div>`;
         
         items.forEach(item => {
             let nama = item.querySelector('.nama-biaya').value || 'Biaya';
@@ -381,21 +388,34 @@ function formatRupiah(angka) {
             rincianHTML += `<div><span style="color:var(--text-muted)">- ${nama}</span> <span>Rp ${formatRupiah(nominal)}</span></div>`;
         });
 
-        // Kumpulkan Tenaga Kerja
-        let jmlKaryawan = parseInt(document.getElementById('jmlKaryawan').value) || 0;
-        let gajiKaryawan = unformatRupiah(document.getElementById('gajiKaryawan').value);
-        let totalGaji = jmlKaryawan * gajiKaryawan;
-        
-        if (jmlKaryawan > 0) {
-            rincianHTML += `<div><span style="color:var(--text-muted)">- Gaji ${jmlKaryawan} karyawan</span> <span>Rp ${formatRupiah(totalGaji)}</span></div>`;
+        // Tentukan Pengali untuk dikonversi ke satuan BULAN
+        let pengali = 1;
+        if (periode === 'Hari') {
+            pengali = HARI_KERJA_SEBULAN; // Dikali 22
+        } else if (periode === 'Minggu') {
+            pengali = 4; // Asumsi 1 bulan = 4 minggu
         }
 
-        let totalBiayaBulan = totalBiayaItems + totalGaji;
+        // Konversi nilai inputan ke Bulanan
+        let omzetBulan = inputOmzet * pengali;
+        let totalBiayaOpsBulan = totalBiayaItems * pengali;
+
+        // Kumpulkan Tenaga Kerja (Gaji SELALU hitungan per bulan)
+        let jmlKaryawan = parseInt(document.getElementById('jmlKaryawan').value) || 0;
+        let gajiKaryawan = unformatRupiah(document.getElementById('gajiKaryawan').value);
+        let totalGajiBulan = jmlKaryawan * gajiKaryawan;
+        
+        if (jmlKaryawan > 0) {
+            rincianHTML += `<div><span style="color:var(--text-muted)">- Gaji ${jmlKaryawan} karyawan (Bulan)</span> <span>Rp ${formatRupiah(totalGajiBulan)}</span></div>`;
+        }
+
+        // Total Biaya Akhir
+        let totalBiayaBulan = totalBiayaOpsBulan + totalGajiBulan;
         rincianHTML += `<div class="bold"><span>Total Biaya / Bulan</span> <span>Rp ${formatRupiah(totalBiayaBulan)}</span></div>`;
         
         document.getElementById('summaryList').innerHTML = rincianHTML;
 
-        // Kalkulasi Omzet
+        // Kalkulasi Tampilan Omzet
         let omzetHari = Math.round(omzetBulan / HARI_KERJA_SEBULAN);
         let omzetTahun = omzetBulan * 12;
 
@@ -403,7 +423,7 @@ function formatRupiah(angka) {
         document.getElementById('resOmzetBulan').innerText = `Rp ${formatRupiah(omzetBulan)}`;
         document.getElementById('resOmzetTahun').innerText = `Rp ${formatRupiah(omzetTahun)}`;
 
-        // Kalkulasi Laba
+        // Kalkulasi Tampilan Laba
         let labaBulan = omzetBulan - totalBiayaBulan;
         let labaHari = Math.round(labaBulan / HARI_KERJA_SEBULAN);
         let labaTahun = labaBulan * 12;
@@ -415,11 +435,11 @@ function formatRupiah(angka) {
         document.getElementById('resLabaBulan').innerText = `Rp ${formatRupiah(labaBulan)}`;
         document.getElementById('resLabaTahun').innerText = `Rp ${formatRupiah(labaTahun)}`;
 
-        // Tampilkan Hasil
+        // Tampilkan Hasil Kalkulasi
         document.getElementById('hasilKalkulasi').style.display = 'block';
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-        // Simpan state sementara untuk fungsi save
+        // Simpan state sementara
         window.currentCalc = {
             nama: document.getElementById('namaUsaha').value || 'Tanpa Nama',
             kategori: activeKategori,
